@@ -14,6 +14,9 @@ app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,a
 Base.metadata.create_all(bind=engine)
 
 
+##====================CRUD COMPUTADORA====================
+##=========================================================
+##========================================================
 
 @app.get('/computadora_get',tags=["CRUD Computadoras"],response_model=List[SchemaPC] )
 def get_computadoras():
@@ -33,6 +36,39 @@ def post_computadoras(argumento:SchemaPC=Body()):
      else:
         db.commit()
         return JSONResponse(status_code=status.HTTP_201_CREATED,content={'message':"Creado"}) 
+     
+@app.put('/computadora_put{id}',tags=['CRUD Computadoras'],response_model=SchemaPC)
+def put_computadora(id:int,datos_corregidos:SchemaPC=Body()):
+    db=SessionLocal()
+    registro_a_modificar=db.query(PC).filter(PC.id==id).first()
+    if registro_a_modificar:
+        registro_a_modificar.descripcion=datos_corregidos.descripcion
+        registro_a_modificar.almacenamiento=datos_corregidos.almacenamiento
+        registro_a_modificar.marca=datos_corregidos.marca
+        registro_a_modificar.memoria_ram=datos_corregidos.memoria_ram
+        registro_a_modificar.sistema_operativo=datos_corregidos.sistema_operativo
+        db.commit()
+        db.refresh(registro_a_modificar)
+        return JSONResponse(status_code=status.HTTP_201_CREATED,content={'message':jsonable_encoder(registro_a_modificar),'mensaje':'Modificado con exito'}) 
+    
+    if not registro_a_modificar:
+        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,content={'mensaje':'El registro con el ID Proporcionado no existe'}) 
+
+     
+@app.delete('/computadora_delete',tags=["CRUD Computadoras"],response_model=dict)
+def delete_computadora(id:int=Body()):
+    db=SessionLocal()
+    
+    try:
+        compute_to_delete=db.query(PC).filter(PC.id==id).first()
+
+        db.delete(compute_to_delete)
+        db.commit()
+    except :
+        return(JSONResponse(status_code=status.HTTP_200_OK,content={'message':f"Computadora no esxiste "}))
+        
+   
+    return JSONResponse(status_code=status.HTTP_200_OK,content={'message':"Computadora Eliminada"}) 
      
 
 
